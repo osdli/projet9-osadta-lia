@@ -1,7 +1,12 @@
-<apex:page controller="TeamOrdersSummaryController" >
-    <div>
-        <h1>
-            Sum of my team orders: <apex:outputText value="{!SumOrders}" />
-        </h1>
-    </div>
+<apex:page controller="TeamOrdersSummaryController">
+    <apex:form>
+        <apex:actionFunction name="refreshSumOrders" action="{!updateSumOrders}" rerender="ordersSumPanel"/>
+        
+        <div id="ordersSumPanel">
+            <h1>Sum of my team orders: <apex:outputText value="{!sumOrders}" /></h1>
+        </div>
+        
+        <!-- Bouton pour rafraîchir la somme des commandes.  -->
+        <apex:commandButton value="Refresh Sum" onclick="refreshSumOrders(); return false;"/>
+    </apex:form>
 </apex:page>

@@ -3,5 +3,5 @@
     <apiVersion>56.0</apiVersion>
     <availableInTouch>false</availableInTouch>
     <confirmationTokenRequired>false</confirmationTokenRequired>
-    <label>plop</label>
+    <label>Sum Ordered Orders</label>
 </ApexPage>
