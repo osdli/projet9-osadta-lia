@@ -37,23 +37,42 @@ public class TestDataFactory {
     }
 
     // Créer des OrderItems pour les commandes
-    public static void createOrderItemsForOrders(List<Order> orders, Id productId, Decimal unitPrice, Integer quantityPerOrder) {
+    public static void createOrderItemsForOrders(List<Order> orders, Id priceBookEntryId, Decimal unitPrice, Integer quantity) {
         List<OrderItem> orderItems = new List<OrderItem>();
-        for(Order ord : orders) {
-            OrderItem oi = new OrderItem(
-                OrderId = ord.Id, 
-                Product2Id = productId, 
-                UnitPrice = unitPrice, 
-                Quantity = quantityPerOrder,
-                ServiceDate = System.today() // ou autre date appropriée
+        for(Order order : orders) {
+            OrderItem orderItem = new OrderItem(
+                OrderId = order.Id,
+                PricebookEntryId = priceBookEntryId,
+                Quantity = quantity,
+                UnitPrice = unitPrice
             );
-            orderItems.add(oi);
+            orderItems.add(orderItem);
         }
-        insert orderItems;
+        
+        try {
+            insert orderItems; // Insère tous les OrderItem en une seule opération DML
+            System.debug('OrderItems inserted successfully');
+        } catch (Exception e) {
+            System.debug('Error inserting OrderItems: ' + e.getMessage());
+            // Gérer l'erreur comme il convient, par exemple, en loggant ou en lançant une exception customisée
+        }
     }
 
     // Créer un nombre spécifié de commandes pour des comptes, en respectant les contrats
     public static List<Order> createOrdersForAccounts(List<Account> accounts, String initialStatus, Integer numOrdersPerAccount, Id priceBookEntryId, Decimal unitPrice, Integer quantityPerOrder) {
+
+        List<Order> orders = createOrdersForAccountsDraft(accounts, initialStatus, numOrdersPerAccount, priceBookEntryId, unitPrice, quantityPerOrder);
+        // Après l'insertion réussie des OrderItems, mettre à jour les Orders à 'Ordered'
+        List<Order> ordersToUpdate = new List<Order>();
+        for (Order ord : orders) {
+            ord.Status = 'Ordered';
+            ordersToUpdate.add(ord);
+        }
+        update ordersToUpdate;
+        return orders;
+    }
+    
+    public static List<Order> createOrdersForAccountsDraft(List<Account> accounts, String initialStatus, Integer numOrdersPerAccount, Id priceBookEntryId, Decimal unitPrice, Integer quantityPerOrder) {
         List<Contract> contracts = createContractsForAccounts(accounts);
     
         // Avant de créer les commandes, récupérer l'ID du livre de prix associé à l'entrée du livre de prix
@@ -95,17 +114,8 @@ public class TestDataFactory {
         }
         insert orderItemsToInsert;
 
-        // Après l'insertion réussie des OrderItems, mettre à jour les Orders à 'Ordered'
-        List<Order> ordersToUpdate = new List<Order>();
-        for (Order ord : orders) {
-            ord.Status = 'Ordered';
-            ordersToUpdate.add(ord);
-        }
-        update ordersToUpdate;
         return orders;
     }
-    
-    
     // Méthode pour créer un produit de test et son entrée dans le livre de prix
     public static Id createTestProductAndPriceBookEntry() {
         // Créer et insérez un produit

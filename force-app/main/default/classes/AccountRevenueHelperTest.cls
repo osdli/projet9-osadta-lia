@@ -30,7 +30,7 @@ private class AccountRevenueHelperTest {
         for (Account acc : testAccounts) {
             accountIds.add(acc.Id);
         }
-
+        
         // Exécution de la logique métier à tester
         Test.startTest();
         AccountRevenueHelper.updateAccountRevenues(accountIds);
