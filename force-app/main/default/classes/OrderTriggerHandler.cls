@@ -12,7 +12,9 @@ public class OrderTriggerHandler {
     public static void afterUpdate(List<Order> orders) {
         Set<Id> accountIds = new Set<Id>();
         for (Order ord : orders) {
-            accountIds.add(ord.AccountId);
+            if(ord.Status == 'Ordered') {
+                accountIds.add(ord.AccountId);
+            }
         }
         
         if (!accountIds.isEmpty()) {
@@ -27,7 +29,7 @@ public class OrderTriggerHandler {
         for (AggregateResult ar : [
             SELECT AccountId, SUM(TotalAmount) total 
             FROM Order 
-            WHERE AccountId IN :accountIds AND Status = 'Closed' 
+            WHERE AccountId IN :accountIds AND Status = 'Ordered' 
             GROUP BY AccountId
         ]) {
             accountRevenues.put((Id)ar.get('AccountId'), (Decimal)ar.get('total'));
