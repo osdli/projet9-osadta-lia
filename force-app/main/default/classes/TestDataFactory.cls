@@ -60,8 +60,9 @@ public class TestDataFactory {
 
     // Créer un nombre spécifié de commandes pour des comptes, en respectant les contrats
     public static List<Order> createOrdersForAccounts(List<Account> accounts, String initialStatus, Integer numOrdersPerAccount, Id priceBookEntryId, Decimal unitPrice, Integer quantityPerOrder) {
+        createOrdersForAccountsDraft(accounts, initialStatus, numOrdersPerAccount, priceBookEntryId, unitPrice, quantityPerOrder);
 
-        List<Order> orders = createOrdersForAccountsDraft(accounts, initialStatus, numOrdersPerAccount, priceBookEntryId, unitPrice, quantityPerOrder);
+        List<Order> orders = createOrdersForAccountsDraft(orderd);
         // Après l'insertion réussie des OrderItems, mettre à jour les Orders à 'Ordered'
         List<Order> ordersToUpdate = new List<Order>();
         for (Order ord : orders) {
