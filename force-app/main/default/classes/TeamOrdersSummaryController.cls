@@ -33,6 +33,5 @@ public without sharing class TeamOrdersSummaryController {
         } else {
             sumOrders = 0;
         }
-        System.debug('updateSumOrders - sumOrders: ' + sumOrders + ' for AccountId: ' + accountId);
     }
 }

@@ -13,11 +13,9 @@ private class TeamOrdersSummaryControllerTest {
         TestDataFactory.createOrdersForAccounts(
             new List<Account>{testAccount}, 'Ordered', 1, priceBookEntryId, 500.00, 1);
 
-        // Debug: Vérifier le nombre de commandes créées et leur statut
+        // Vérifier le nombre de commandes créées et leur statut
         List<Order> orders = [SELECT Id, Status FROM Order WHERE AccountId = :testAccount.Id];
-        System.debug('Orders created: ' + orders.size());
         for (Order ord : orders) {
-            System.debug('Order Status: ' + ord.Status);
         }
 
         // Instanciation du contrôleur avec le compte test
@@ -26,9 +24,6 @@ private class TeamOrdersSummaryControllerTest {
 
         // Récupération de la somme des commandes
         Decimal sumOrders = controller.sumOrders;
-
-        // Debug: Vérifier la somme des commandes calculée
-        System.debug('Calculated sumOrders: ' + sumOrders);
 
         // Vérification de la somme des commandes
         System.assertEquals(500, sumOrders, 'La somme des commandes devrait être égale à 500');
