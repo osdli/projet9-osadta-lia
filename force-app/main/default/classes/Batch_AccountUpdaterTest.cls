@@ -13,9 +13,9 @@ private class Batch_AccountUpdaterTest {
         Id priceBookEntryId = TestDataFactory.createTestProductAndPriceBookEntry();
 
         // Création des commandes et des éléments de commande pour les comptes
-        Decimal unitPrice = 100; 
+        Decimal unitPrice = 5000; 
         Integer quantityPerOrder = 2; 
-        List<Order> orders = TestDataFactory.createOrdersForAccounts(testAccounts, 'Ordered', 1, priceBookEntryId, unitPrice, quantityPerOrder);
+        List<Order> orders = TestDataFactory.createOrdersForAccounts(testAccounts, 'Ordered', 101, priceBookEntryId, unitPrice, quantityPerOrder);
     }
 
     @isTest

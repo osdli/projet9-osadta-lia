@@ -4,13 +4,13 @@ public without sharing class TeamOrdersSummaryController {
 
    
     public TeamOrdersSummaryController() {
-        // Récupération de l'ID du compte en le lisant depuis l'URL ou une source interne
+        // Récupération de l'ID du compte en le lisant depuis l'URL 
         accountId = ApexPages.currentPage().getParameters().get('id');
         // Initialiser sumOrders
         updateSumOrders();
     }
 
-    // Méthode pour mettre à jour l'ID du compte, si nécessaire
+    // Méthode pour mettre à jour l'ID du compte
     public void setAccountId(String accId) {
         this.accountId = accId;
         // Après la mise à jour de l'ID, rafraîchir la somme des commandes
