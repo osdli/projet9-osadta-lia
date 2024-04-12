@@ -1,63 +1,78 @@
 @isTest
 private class OrderTriggerHandlerTest {
-    
+
     @testSetup
     static void setupTestData() {
-        // Création et insertion d'un compte test
         Account testAccount = new Account(Name = 'Test Account');
         insert testAccount;
 
-        // Obtention de l'ID du livre de prix standard
-        Id standardPriceBookId = Test.getStandardPricebookId();
-
-        // Création et insertion d'un produit test
         Product2 testProduct = new Product2(Name = 'Test Product', ProductCode = 'TP001', IsActive = true);
         insert testProduct;
 
-        // Création et insertion d'une entrée de livre de prix pour le produit test
+        Id standardPriceBookId = Test.getStandardPricebookId();
+
         PricebookEntry standardPriceBookEntry = new PricebookEntry(
             Product2Id = testProduct.Id,
             PriceBook2Id = standardPriceBookId,
-            UnitPrice = 1000.00,
+            UnitPrice = 25000.00,
             IsActive = true
         );
         insert standardPriceBookEntry;
 
-        // Utilisation de TestDataFactory pour créer la commande et l'OrderItem
-        TestDataFactory.createOrdersForAccounts(
-            new List<Account>{testAccount}, 'Draft', 1, standardPriceBookEntry.Id, 1000.00, 1);
+        List<Order> testOrders = new List<Order>();
+        for (Integer i = 0; i < 2; i++) {
+            Order testOrder = new Order(
+                AccountId = testAccount.Id,
+                Status = 'Draft',
+                EffectiveDate = Date.today(),
+                Pricebook2Id = standardPriceBookId
+            );
+            testOrders.add(testOrder);
+        }
+        insert testOrders;
+
+        // Créer OrderItems pour chaque commande
+        for (Order ord : testOrders) {
+            OrderItem oi = new OrderItem(
+                OrderId = ord.Id,
+                PricebookEntryId = standardPriceBookEntry.Id,
+                Quantity = 1,
+                UnitPrice = 5000.00
+            );
+            insert oi;
+        }
     }
 
     @isTest
     static void testBeforeUpdate() {
-        // Récupération et mise à jour de la commande test
-        Order testOrder = [SELECT Id, Status FROM Order LIMIT 1];
-        String originalStatus = testOrder.Status;
-        testOrder.Status = 'Activated';
+        // Sélection d'une commande de test à mettre à jour
+        Order testOrder = [SELECT Id, TotalAmount, ShipmentCost__c, NetAmount__c FROM Order WHERE Status = 'Draft' LIMIT 1];
+        testOrder.ShipmentCost__c = 100.00;
         update testOrder;
         
-        // Requêter la commande après mise à jour pour vérifier les changements
-        Order updatedOrder = [SELECT Id, Status FROM Order WHERE Id = :testOrder.Id];
+        // Vérification que NetAmount__c a été correctement mis à jour
+        Order updatedOrder = [SELECT Id, NetAmount__c FROM Order WHERE Id = :testOrder.Id];
+        Decimal expectedNetAmount = testOrder.TotalAmount - testOrder.ShipmentCost__c;
         
-        // Assertions pour vérifier si la mise à jour a réussi
-        System.assertNotEquals(originalStatus, updatedOrder.Status, 'Le statut de la commande devrait être mis à jour.');
-        System.assertEquals('Activated', updatedOrder.Status, 'Le statut de la commande devrait être maintenant Activated.');
+        System.assertEquals(expectedNetAmount, updatedOrder.NetAmount__c, 'Le montant net devrait être correctement recalculé.');
     }
 
     @isTest
     static void testAfterUpdate() {
-        // Récupérer la commande
-        Order testOrder = [SELECT Id, Status, AccountId FROM Order LIMIT 1];
+        // Mise à jour du statut de toutes les commandes pour déclencher le traitement 'after update'
+        List<Order> ordersToUpdate = [SELECT Id, Status FROM Order WHERE Status = 'Draft'];
+        for (Order ord : ordersToUpdate) {
+            ord.Status = 'Ordered';
+        }
+        update ordersToUpdate;
+
+        // Vérification que le chiffre d'affaires des comptes a été mis à jour
+        Account updatedAccount = [SELECT Id, Chiffre_d_affaire__c FROM Account WHERE Name = 'Test Account' LIMIT 1];
         
-        // Mise à jour de la commande pour passer au statut 'Ordered'
-        testOrder.Status = 'Ordered';
-        update testOrder;
+        // Le chiffre d'affaires attendu doit être le total des montants des commandes mises à jour.
+        Decimal expectedRevenue = 2 * 5000.00; 
         
-        // Récupérer les informations à jour de la commande et du compte associé
-        Account updatedAccount = [SELECT Id, Chiffre_d_affaire__c FROM Account WHERE Id = :testOrder.AccountId];
-        
-        // Assertions pour vérifier que le chiffre d'affaire a été mis à jour
-        System.assertNotEquals(null, updatedAccount.Chiffre_d_affaire__c, 'Le chiffre d\'affaire ne devrait pas être null.');
-        System.assert(updatedAccount.Chiffre_d_affaire__c > 0, 'Le chiffre d\'affaire devrait être supérieur à 0.');
-    }
+        System.assertEquals(expectedRevenue, updatedAccount.Chiffre_d_affaire__c, 
+            'Le chiffre d\'affaire de l\'account devrait être mis à jour à ' + expectedRevenue + ', mais était ' + updatedAccount.Chiffre_d_affaire__c);
+    }    
 }

@@ -58,42 +58,21 @@ public class TestDataFactory {
         }
     }
 
-    // Créer un nombre spécifié de commandes pour des comptes, en respectant les contrats
+    // Créer un nombre spécifié de commandes pour des comptes
     public static List<Order> createOrdersForAccounts(List<Account> accounts, String initialStatus, Integer numOrdersPerAccount, Id priceBookEntryId, Decimal unitPrice, Integer quantityPerOrder) {
-        createOrdersForAccountsDraft(accounts, initialStatus, numOrdersPerAccount, priceBookEntryId, unitPrice, quantityPerOrder);
-
-        List<Order> orders = createOrdersForAccountsDraft(orderd);
-        // Après l'insertion réussie des OrderItems, mettre à jour les Orders à 'Ordered'
-        List<Order> ordersToUpdate = new List<Order>();
-        for (Order ord : orders) {
-            ord.Status = 'Ordered';
-            ordersToUpdate.add(ord);
-        }
-        update ordersToUpdate;
-        return orders;
-    }
-    
-    public static List<Order> createOrdersForAccountsDraft(List<Account> accounts, String initialStatus, Integer numOrdersPerAccount, Id priceBookEntryId, Decimal unitPrice, Integer quantityPerOrder) {
+        List<Order> orders = new List<Order>();
         List<Contract> contracts = createContractsForAccounts(accounts);
     
         // Avant de créer les commandes, récupérer l'ID du livre de prix associé à l'entrée du livre de prix
         PriceBookEntry pbe = [SELECT Id, Pricebook2Id FROM PriceBookEntry WHERE Id = :priceBookEntryId LIMIT 1];
         Id priceBookId = pbe.Pricebook2Id;
     
-        // Vérifier que priceBookId n'est pas null avant de continuer
-        if (priceBookId == null) {
-            // Gérer l'erreur ou lancer une exception si le livre de prix n'est pas trouvé
-            System.debug('Le livre de prix n\'est pas trouvé.');
-            return new List<Order>(); 
-        }
-    
-        // Création des commandes avec le statut 'Draft' et association du livre de prix
-        List<Order> orders = new List<Order>();
+        // Création des commandes avec le statut initial et association du livre de prix
         for(Account acc : accounts) {
             for(Integer i = 0; i < numOrdersPerAccount; i++) {
                 Order newOrder = new Order(
                     AccountId = acc.Id, 
-                    Status = 'Draft', 
+                    Status = initialStatus, 
                     EffectiveDate = System.today(), 
                     Pricebook2Id = priceBookId 
                 );
@@ -103,20 +82,11 @@ public class TestDataFactory {
         insert orders;
     
         // Création et insertion des OrderItems pour chaque commande
-        List<OrderItem> orderItemsToInsert = new List<OrderItem>();
-        for (Order ord : orders) {
-            OrderItem oi = new OrderItem(
-                OrderId = ord.Id, 
-                PriceBookEntryId = priceBookEntryId,
-                UnitPrice = unitPrice, 
-                Quantity = quantityPerOrder 
-            );
-            orderItemsToInsert.add(oi);
-        }
-        insert orderItemsToInsert;
+        createOrderItemsForOrders(orders, priceBookEntryId, unitPrice, quantityPerOrder);
 
         return orders;
     }
+
     // Méthode pour créer un produit de test et son entrée dans le livre de prix
     public static Id createTestProductAndPriceBookEntry() {
         // Créer et insérez un produit
@@ -137,5 +107,4 @@ public class TestDataFactory {
         
         return standardPBE.Id;
     }
-    
 }

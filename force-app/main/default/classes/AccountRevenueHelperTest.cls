@@ -3,45 +3,51 @@ private class AccountRevenueHelperTest {
 
     @testSetup
     static void setupTestData() {
-         // Création des comptes de test
-    List<Account> testAccounts = TestDataFactory.createAccounts(101);
-    
-    // Création des contrats pour les comptes de test
-    List<Contract> contracts = TestDataFactory.createContractsForAccounts(testAccounts);
+        // Création des comptes de test
+        List<Account> testAccounts = TestDataFactory.createAccounts(10);
 
-    // Création du produit de test et de l'entrée dans le livre de prix
-    Id priceBookEntryId = TestDataFactory.createTestProductAndPriceBookEntry();
-    System.assertNotEquals(null, priceBookEntryId, 'Le PriceBookEntry n\'a pas été créé.');
+        // Création des contrats pour les comptes de test
+        List<Contract> contracts = TestDataFactory.createContractsForAccounts(testAccounts);
 
-    // Vérifier que le PriceBookEntry est bien présent.
-    PriceBookEntry pbe = [SELECT Id FROM PriceBookEntry WHERE Id = :priceBookEntryId];
-    System.assertNotEquals(null, pbe, 'Le PriceBookEntry n\'a pas été récupéré.');
-        // Création de commandes et d'ordres pour les comptes
-        TestDataFactory.createOrdersForAccounts(testAccounts, 'Ordered', 10, priceBookEntryId, 5000.00, 2);
+        // Création du produit de test et de l'entrée dans le livre de prix
+        Id priceBookEntryId = TestDataFactory.createTestProductAndPriceBookEntry();
+
+        // Création de commandes en tant que brouillon (Draft) pour les comptes
+        TestDataFactory.createOrdersForAccounts(testAccounts, 'Draft', 200, priceBookEntryId, 5000.00, 2);
+
+        // Mise à jour des commandes à l'état 'Ordered' 
+        List<Order> draftOrders = [SELECT Id FROM Order WHERE Status = 'Draft' AND AccountId IN :testAccounts];
+        for(Order ord : draftOrders) {
+            ord.Status = 'Ordered';
+            
+        }
+        update draftOrders; 
     }
+
 
     @isTest
     static void testUpdateAccountRevenues() {
-        // Récupération des comptes de test insérés par la méthode setupTestData
-        List<Account> testAccounts = [SELECT Id FROM Account];
+        // Récupération d'un des comptes de test insérés par la méthode setupTestData
+        Account testAccount = [SELECT Id FROM Account LIMIT 1];
+        Id testAccountId = testAccount.Id;
         
-        // Préparation des données de test pour la mise à jour des revenus
-        Set<Id> accountIds = new Set<Id>();
-        for (Account acc : testAccounts) {
-            accountIds.add(acc.Id);
+        // Préparer un montant attendu pour le test
+        Decimal expectedRevenueForAccount = 0;
+        List<Order> ordersForAccount = [SELECT TotalAmount FROM Order WHERE AccountId = :testAccountId AND Status = 'Ordered'];
+        for (Order ord : ordersForAccount) {
+            expectedRevenueForAccount += ord.TotalAmount;
         }
-        
-        // Exécution de la logique métier à tester
+
+        // Exécuter la logique de mise à jour des revenus
         Test.startTest();
-        AccountRevenueHelper.updateAccountRevenues(accountIds);
+        AccountRevenueHelper.updateAccountRevenues(new Set<Id>{testAccountId});
         Test.stopTest();
 
-        // Vérification des résultats
-        List<Account> updatedAccounts = [SELECT Id, Chiffre_d_affaire__c FROM Account WHERE Id IN :accountIds];
-        for (Account acc : updatedAccounts) {
-            System.assertNotEquals(null, acc.Chiffre_d_affaire__c, 'Le chiffre d\'affaire ne devrait pas être null');
-            System.assert(acc.Chiffre_d_affaire__c > 0, 'Le chiffre d\'affaire devrait être mis à jour et supérieur à 0');
-        }
+        // Récupération du compte après la mise à jour pour vérifier le chiffre d'affaires
+        testAccount = [SELECT Id, Chiffre_d_affaire__c FROM Account WHERE Id = :testAccountId];
+
+        // Vérification que le chiffre d'affaires est correct
+        System.assertEquals(expectedRevenueForAccount, testAccount.Chiffre_d_affaire__c,
+        'Le chiffre d\'affaire de l\'account devrait être précisément mis à jour à ' + expectedRevenueForAccount + ' mais était ' + testAccount.Chiffre_d_affaire__c);
     }
-    
 }

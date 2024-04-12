@@ -15,6 +15,6 @@ global class Batch_AccountUpdater implements Database.Batchable<sObject>{
     }
      
     global void finish(Database.BatchableContext BC){     
-        // Code de nettoyage ou de suivi final, si nécessaire
+     
     } 
 }
