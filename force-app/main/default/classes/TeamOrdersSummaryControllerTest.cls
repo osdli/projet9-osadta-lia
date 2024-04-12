@@ -28,7 +28,7 @@ private class TeamOrdersSummaryControllerTest {
 
         // Création de commandes pour le compte test avec le statut 'Draft'
         TestDataFactory.createOrdersForAccounts(
-            new List<Account>{testAccount}, 'Draft', 101, priceBookEntryId, 250.00, 1);
+            new List<Account>{testAccount}, 'Draft', 200, priceBookEntryId, 5000.00, 1);
 
         // Mettre à jour le statut des commandes à 'Ordered'
         List<Order> ordersToUpdate = [SELECT Id FROM Order WHERE AccountId = :testAccount.Id AND Status = 'Draft'];
@@ -39,19 +39,22 @@ private class TeamOrdersSummaryControllerTest {
     }
 
     @isTest
-    static void testSumOrdersWithMultipleOrders() {
-        // Récupération du compte test
-        Account testAccount = [SELECT Id FROM Account WHERE Name = 'Test Account' LIMIT 1];
-        Test.setCurrentPageReference(new PageReference('Page.dummyPage'));
-        ApexPages.currentPage().getParameters().put('id', testAccount.Id);
-    
-        // Instanciation du contrôleur
-        TeamOrdersSummaryController controller = new TeamOrdersSummaryController();
-    
-        // Le UnitPrice est de 5000.00 pour 101 commandes avec chaque commande ayant un OrderItem au UnitPrice 5000.
-        Decimal expectedSum = 101 * 5000.00; 
-        System.assertEquals(expectedSum, controller.sumOrders, 'La somme des commandes devrait être égale à ' + expectedSum);
-    }
+static void testSumOrdersWithMultipleOrders() {
+    // Vérifier le compte et les commandes
+    Account testAccount = [SELECT Id, (SELECT Id FROM Orders) FROM Account WHERE Name = 'Test Account' LIMIT 1];
+    System.debug('Number of orders: ' + testAccount.Orders.size()); // Afficher le nombre de commandes trouvées pour déboguer
+
+    Test.setCurrentPageReference(new PageReference('Page.dummyPage'));
+    ApexPages.currentPage().getParameters().put('id', testAccount.Id);
+
+    // Instanciation du contrôleur
+    TeamOrdersSummaryController controller = new TeamOrdersSummaryController();
+
+    // Le UnitPrice est de 5000.00 pour 200 commandes avec chaque commande ayant un OrderItem au UnitPrice 5000.
+    Decimal expectedSum = 200 * 5000.00;
+    System.assertEquals(expectedSum, controller.sumOrders, 'La somme des commandes devrait être égale à ' + expectedSum);
+}
+
 
     @isTest
     static void testSumOrdersWithNoOrders() {

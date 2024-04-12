@@ -13,9 +13,9 @@ private class AccountRevenueHelperTest {
         Id priceBookEntryId = TestDataFactory.createTestProductAndPriceBookEntry();
 
         // Création de commandes en tant que brouillon (Draft) pour les comptes
-        TestDataFactory.createOrdersForAccounts(testAccounts, 'Draft', 101, priceBookEntryId, 5000.00, 2);
+        TestDataFactory.createOrdersForAccounts(testAccounts, 'Draft', 200, priceBookEntryId, 5000.00, 2);
 
-        // Mise à jour des commandes à l'état 'Ordered' si votre processus le permet
+        // Mise à jour des commandes à l'état 'Ordered' 
         List<Order> draftOrders = [SELECT Id FROM Order WHERE Status = 'Draft' AND AccountId IN :testAccounts];
         for(Order ord : draftOrders) {
             ord.Status = 'Ordered';
@@ -48,6 +48,6 @@ private class AccountRevenueHelperTest {
 
         // Vérification que le chiffre d'affaires est correct
         System.assertEquals(expectedRevenueForAccount, testAccount.Chiffre_d_affaire__c,
-            'Le chiffre d\'affaire devrait être mis à jour avec le montant correct des commandes.');
+        'Le chiffre d\'affaire de l\'account devrait être précisément mis à jour à ' + expectedRevenueForAccount + ' mais était ' + testAccount.Chiffre_d_affaire__c);
     }
 }

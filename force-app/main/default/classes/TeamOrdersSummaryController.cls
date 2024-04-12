@@ -10,14 +10,14 @@ public without sharing class TeamOrdersSummaryController {
         updateSumOrders();
     }
 
-    // Méthode pour mettre à jour l'ID du compte
+    // Mettre à jour l'ID du compte
     public void setAccountId(String accId) {
         this.accountId = accId;
         // Après la mise à jour de l'ID, rafraîchir la somme des commandes
         updateSumOrders();
     }
 
-    // Méthode pour mettre à jour la somme des commandes
+    // Mettre à jour la somme des commandes
     public void updateSumOrders() {
         if (accountId != null) {
             AggregateResult groupedResults = [

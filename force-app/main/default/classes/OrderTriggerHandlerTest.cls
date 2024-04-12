@@ -72,6 +72,7 @@ private class OrderTriggerHandlerTest {
         // Le chiffre d'affaires attendu doit être le total des montants des commandes mises à jour.
         Decimal expectedRevenue = 2 * 5000.00; 
         
-        System.assertEquals(expectedRevenue, updatedAccount.Chiffre_d_affaire__c, 'Le chiffre d\'affaire de l\'account devrait être mis à jour.');
-    }
+        System.assertEquals(expectedRevenue, updatedAccount.Chiffre_d_affaire__c, 
+            'Le chiffre d\'affaire de l\'account devrait être mis à jour à ' + expectedRevenue + ', mais était ' + updatedAccount.Chiffre_d_affaire__c);
+    }    
 }

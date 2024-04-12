@@ -1,6 +1,6 @@
 public class OrderTriggerHandler {
     
-    // Méthode pour gérer 'before update'
+    // Gérer 'before update'
     public static void beforeUpdate(List<Order> orders) {
         for (Order ord : orders) {
             Decimal shipmentCost = ord.ShipmentCost__c != null ? ord.ShipmentCost__c : 0;
@@ -8,7 +8,7 @@ public class OrderTriggerHandler {
         }
     }
 
-    // Méthode pour gérer 'after update'
+    // Gérer 'after update'
     public static void afterUpdate(List<Order> orders) {
         Set<Id> accountIds = new Set<Id>();
         for (Order ord : orders) {
@@ -22,7 +22,7 @@ public class OrderTriggerHandler {
         }
     }
 
-    // Méthode privée pour mettre à jour le chiffre d'affaires des comptes
+    // Mettre à jour le chiffre d'affaires des comptes
     private static void updateAccountRevenues(Set<Id> accountIds) {
         Map<Id, Decimal> accountRevenues = new Map<Id, Decimal>();
         
